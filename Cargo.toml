@@ -1,0 +1,9 @@
+[package]
+name = "tree"
+version = "1.0.0"
+authors = ["Jenna Fligor <jenna@fligor.net>"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+clap = { version = "3.1.6" }
