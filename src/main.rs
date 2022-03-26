@@ -27,7 +27,7 @@ use std::fs;
 use std::path;
 use std::vec;
 
-const VERSION: &str = "1.0.1";
+const VERSION: &str = "1.1.0";
 
 fn main() {
 
@@ -35,8 +35,7 @@ fn main() {
     let args: clap::ArgMatches = clap::Command::new("tree")
         .author("Jenna Fligor <jenna@fligor.net>")
         .version(VERSION)
-        .about("\nGraphically displays the directory structure of a path\n\
-                  (silently ignores contents of unreadable directories)")
+        .about("\nGraphically displays the directory structure of a path")
         .arg(clap::Arg::new("path")
             .takes_value(true)
             .help("path to root directory of tree (defaults to current \
@@ -62,7 +61,7 @@ fn main() {
                 path = path::PathBuf::from(path_arg);
             },
             None => {
-                eprintln!("error: optional positional argument <path> is both \
+                eprintln!("error: Optional positional argument <path> is both \
                            set and has no value");
                 std::process::exit(1);
             }
@@ -71,18 +70,18 @@ fn main() {
         path = match env::current_dir() {
             Ok(value) => value,
             Err(error) => {
-                eprintln!("error: unable to get current directory: {}", error);
+                eprintln!("error: Unable to get current directory: {}", error);
                 std::process::exit(1);
             },
         };
     }
 
-    // canonicalize the search path, this ensures the path valid as well as
-    // resolving symlinks
+    // resolve the search path, this ensures the path valid as well as
+    // following any symlinks
     let path = match path.canonicalize() {
         Ok(value) => value,
         Err(error) => {
-            eprintln!("error: unable to canonicalize \"{}\": {}",
+            eprintln!("error: Unable to resolve \"{}\": {}",
                       path.to_string_lossy(), error);
             std::process::exit(1);
         }
@@ -93,7 +92,7 @@ fn main() {
     let metadata = match path.metadata() {
         Ok(value) => value,
         Err(error) => {
-            eprintln!("error: unable to get metadata of \"{}\": {}",
+            eprintln!("error: Unable to get metadata of \"{}\": {}",
                       path.to_string_lossy(), error);
             std::process::exit(1);
         }
@@ -133,12 +132,25 @@ fn print_subtree(path: &path::Path, show_files: bool, prefix: &vec::Vec<bool>,
     // read directory contents into iterator
     let dir_iter = match fs::read_dir(path) {
         Ok(value) => value,
-        Err(_) => return,
+        Err(_) => {
+            // indent one level and print an error message indicating the
+            // contents of the directory could not be read, then return
+            for (_, last_entry) in prefix.iter().enumerate() {
+                    if *last_entry {
+                        print!("{}", format_str[2]);
+                    } else {
+                        print!("{}", format_str[3]);
+                    }
+            }
+            print!("{}", format_str[0]);
+            println!("<CONTENTS UNREADABLE>");
+            return;
+        },
     };
 
     // create a vector of directory entry, boolean pairs; the bool value stores
     // wether or not the entry is a directory
-    let mut entries = vec::Vec::<(fs::DirEntry,bool)>::new() ;
+    let mut entries = vec::Vec::<(fs::DirEntry,bool)>::new();
     // iterate over the directory contents iterator, depending on wether or not
     // the show files flag was used, the non-directory files may be discarded
     for entry in dir_iter {
