@@ -60,17 +60,13 @@ fn main() {
             Some(path_arg) => {
                 path = path::PathBuf::from(path_arg);
             },
-            None => {
-                eprintln!("error: Optional positional argument <path> is both \
-                           set and has no value");
-                std::process::exit(1);
-            }
+            None => unreachable!()
         }
     } else {
         path = match env::current_dir() {
             Ok(value) => value,
             Err(error) => {
-                eprintln!("error: Unable to get current directory: {}", error);
+                eprintln!("ERROR: \".\" {}", error);
                 std::process::exit(1);
             },
         };
@@ -81,7 +77,7 @@ fn main() {
     let path = match path.canonicalize() {
         Ok(value) => value,
         Err(error) => {
-            eprintln!("error: Unable to resolve \"{}\": {}",
+            eprintln!("ERROR: \"{}\" {}",
                       path.to_string_lossy(), error);
             std::process::exit(1);
         }
@@ -92,7 +88,7 @@ fn main() {
     let metadata = match path.metadata() {
         Ok(value) => value,
         Err(error) => {
-            eprintln!("error: Unable to get metadata of \"{}\": {}",
+            eprintln!("ERROR: \"{}\" {}",
                       path.to_string_lossy(), error);
             std::process::exit(1);
         }
@@ -100,7 +96,7 @@ fn main() {
 
     // directory sanity check
     if !metadata.is_dir() {
-        eprintln!("error: \"{}\" is not a directory", path.to_string_lossy());
+        eprintln!("ERROR: \"{}\" Is not a directory", path.to_string_lossy());
         std::process::exit(1);
     }
 
