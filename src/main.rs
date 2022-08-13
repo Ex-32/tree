@@ -27,12 +27,12 @@ use std::fs;
 use std::path;
 use std::vec;
 
-const VERSION: &str = "1.1.0";
+const VERSION: &str = "1.1.1";
 
 fn main() {
 
     // define and parse command args using clap library
-    let args: clap::ArgMatches = clap::Command::new("tree")
+    let args = clap::Command::new("tree")
         .author("Jenna Fligor <jenna@fligor.net>")
         .version(VERSION)
         .about("\nGraphically displays the directory structure of a path")
@@ -107,12 +107,11 @@ fn main() {
     };
 
     // set str used for formatting based on wether the ascii flag was set
-    let format_str: vec::Vec<&str> ;
-    if args.is_present("ascii") {
-        format_str = vec::Vec::from(["\\---","+---","    ","|   "]);
+    let format_str = if args.is_present("ascii") {
+        Vec::from(["\\---","+---","    ","|   "])
     } else {
-        format_str = vec::Vec::from(["└───","├───","    ","│   "]);
-    }
+        Vec::from(["└───","├───","    ","│   "])
+    };
 
     // print root folder name with no prefix and start recursive subtree print
     println!("{}",name);
@@ -122,7 +121,7 @@ fn main() {
 }
 
 // recursively prints directory entries with formatting based on prefix
-fn print_subtree(path: &path::Path, show_files: bool, prefix: &vec::Vec<bool>,
+fn print_subtree(path: &path::Path, show_files: bool, prefix: &[bool],
                  format_str: &vec::Vec<&str>) {
 
     // read directory contents into iterator
@@ -188,7 +187,7 @@ fn print_subtree(path: &path::Path, show_files: bool, prefix: &vec::Vec<bool>,
 
         // clone the prefix and push a true to it if it's the last item in the
         // vector, otherwise push false
-        let mut new_prefix = prefix.clone();
+        let mut new_prefix = Vec::from(prefix);
         new_prefix.push(i == entries_count-1);
 
         // use the formatting prefix to format the path structure before the
@@ -201,12 +200,10 @@ fn print_subtree(path: &path::Path, show_files: bool, prefix: &vec::Vec<bool>,
                 } else {
                     print!("{}", format_str[1]);
                 }
+            } else if *last_entry {
+                print!("{}", format_str[2]);
             } else {
-                if *last_entry {
-                    print!("{}", format_str[2]);
-                } else {
-                    print!("{}", format_str[3]);
-                }
+                print!("{}", format_str[3]);
             }
         }
 
