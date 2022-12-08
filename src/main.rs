@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use color_eyre::eyre::Result;
+
 use std::env;
 use std::fs;
 use std::path;
@@ -29,7 +31,11 @@ use std::vec;
 
 const VERSION: &str = "1.1.1";
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+    if env::var("RUST_SPANTRACE").is_err() {
+        env::set_var("RUST_SPANTRACE", "0");
+    }
 
     // define and parse command args using clap library
     let args = clap::Command::new("tree")
@@ -74,25 +80,11 @@ fn main() {
 
     // resolve the search path, this ensures the path valid as well as
     // following any symlinks
-    let path = match path.canonicalize() {
-        Ok(value) => value,
-        Err(error) => {
-            eprintln!("ERROR: \"{}\" {}",
-                      path.to_string_lossy(), error);
-            std::process::exit(1);
-        }
-    };
+    let path = path.canonicalize()?;
 
     // extract important metadata, like for example, is what this path refers to
     // a directory
-    let metadata = match path.metadata() {
-        Ok(value) => value,
-        Err(error) => {
-            eprintln!("ERROR: \"{}\" {}",
-                      path.to_string_lossy(), error);
-            std::process::exit(1);
-        }
-    };
+    let metadata = path.metadata()?;
 
     // directory sanity check
     if !metadata.is_dir() {
@@ -118,6 +110,7 @@ fn main() {
     print_subtree(&path, args.is_present("files"), &vec::Vec::new(),
                   &format_str);
 
+    Ok(())
 }
 
 // recursively prints directory entries with formatting based on prefix
